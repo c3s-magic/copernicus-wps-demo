@@ -124,15 +124,16 @@ class ModesVariability(Process):
             and their relative relative bias (percentage) in the frequency of
             occurrence and the persistence of each mode.""",
             metadata=[
+		Metadata('Estimated Calculation Time', '30 seconds'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',
-                    'https://copernicus-wps-demo.readthedocs.io/en/latest/processes.html#pydemo',
+                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_modes_of_variability.html',
                     role=util.WPS_ROLE_DOC),
-                Metadata(
-                    'Media',
-                    util.diagdata_url() + '/pydemo/pydemo_thumbnail.png',
-                    role=util.WPS_ROLE_MEDIA),
+#                Metadata(
+#                    'Media',
+#                    util.diagdata_url() + '/pydemo/pydemo_thumbnail.png',
+#                    role=util.WPS_ROLE_MEDIA),
             ],
             inputs=inputs,
             outputs=outputs,

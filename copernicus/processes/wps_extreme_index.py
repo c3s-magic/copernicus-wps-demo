@@ -55,10 +55,11 @@ class ExtremeIndex(Process):
             version=runner.VERSION,
             abstract="""Metric showing extreme indices relevant to the insurance industry (heat, cold, wind, flood and drought indices).""",
             metadata=[
+                Metadata('Estimated Calculation Time', '2 minutes'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',
-                    'https://copernicus-wps-demo.readthedocs.io/en/latest/processes.html#pydemo',
+                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_combined_climate_extreme_index.html',
                     role=util.WPS_ROLE_DOC),
                 Metadata(
                     'Media',

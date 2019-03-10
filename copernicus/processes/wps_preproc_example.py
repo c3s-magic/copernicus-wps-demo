@@ -69,17 +69,18 @@ class PreprocessExample(Process):
             identifier="preproc",
             title="Preprocessing Demo",
             version=runner.VERSION,
-            abstract="Generates a plot for temperature using ESMValTool."
-             " The default run uses the following CMIP5 data:"
-             " project=CMIP5, experiment=historical, ensemble=r1i1p1, variable=ta, model=MPI-ESM-LR, time_frequency=mon",  # noqa
+            abstract="Generates a plot for temperature using ESMValTool.",
+#             " The default run uses the following CMIP5 data:"
+#             " project=CMIP5, experiment=historical, ensemble=r1i1p1, variable=ta, model=MPI-ESM-LR, time_frequency=mon.",  # noqa
             metadata=[
+                Metadata('Estimated Calculation Time', '1 Minute'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
-                Metadata('Documentation',
-                         'https://copernicus-wps-demo.readthedocs.io/en/latest/processes.html#pydemo',
-                         role=util.WPS_ROLE_DOC),
-                Metadata('Media',
-                         util.diagdata_url() + '/pydemo/pydemo_thumbnail.png',
-                         role=util.WPS_ROLE_MEDIA)
+#                Metadata('Documentation',
+#                         'https://copernicus-wps-demo.readthedocs.io/en/latest/processes.html#pydemo',
+#                         role=util.WPS_ROLE_DOC),
+#                Metadata('Media',
+#                         util.diagdata_url() + '/pydemo/pydemo_thumbnail.png',
+#                         role=util.WPS_ROLE_MEDIA)
             ],
             inputs=inputs,
             outputs=outputs,

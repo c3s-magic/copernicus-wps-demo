@@ -74,15 +74,16 @@ class HeatwavesColdwaves(Process):
             version=runner.VERSION,
             abstract="""Metric showing the duration of heatwaves and coldwaves, to help understand potential changes in energy demand.""",
             metadata=[
+                Metadata('Estimated Calculation Time', '4 minutes'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',
-                    'https://esmvaltool.readthedocs.io/en/version2_development/recipes/recipe_heatwaves_coldwaves.html',
+                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_heatwaves_coldwaves.html',
                     role=util.WPS_ROLE_DOC),
-                Metadata(
-                    'Media',
-                    util.diagdata_url() + '/heatwaves_coldwaves/extreme_spells_energy.png',
-                    role=util.WPS_ROLE_MEDIA),
+#                Metadata(
+#                    'Media',
+#                    util.diagdata_url() + '/heatwaves_coldwaves/extreme_spells_energy.png',
+#                    role=util.WPS_ROLE_MEDIA),
             ],
             inputs=inputs,
             outputs=outputs,

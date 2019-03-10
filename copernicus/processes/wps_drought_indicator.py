@@ -74,6 +74,7 @@ class DroughtIndicator(Process):
             version=runner.VERSION,
             abstract="""The drought indicator calculates diagnostics for meteorological drought.""",
             metadata=[
+                Metadata('Estimated Calculation Time', '45 minutes'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',

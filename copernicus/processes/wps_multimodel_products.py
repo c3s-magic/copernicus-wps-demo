@@ -79,15 +79,16 @@ class MultimodelProducts(Process):
                 mean anomaly, and the ensemble variance and agreement are
                 calculated. The results are shown as maps and time series.""",
             metadata=[
+		Metadata('Estimated Calculation Time', '1 minute'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',
-                    'https://esmvaltool.readthedocs.io/en/version2_development/recipes/recipe_multimodel_products.html',
+                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_multimodel_products.html',
                     role=util.WPS_ROLE_DOC),
-                Metadata(
-                    'Media',
-                    util.diagdata_url() + '/multimodel_products/bsc_anomaly_timeseries.png',
-                    role=util.WPS_ROLE_MEDIA),
+#                Metadata(
+#                    'Media',
+#                    util.diagdata_url() + '/multimodel_products/bsc_anomaly_timeseries.png',
+#                    role=util.WPS_ROLE_MEDIA),
             ],
             inputs=inputs,
             outputs=outputs,

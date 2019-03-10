@@ -114,15 +114,16 @@ class EnsClus(Process):
                 Currently included are the models: ACCESS1-0, ACCESS1-3,
                 CanESM2, CCSM4, CESM1-BGC""",
             metadata=[
+                Metadata('Estimated Calculation Time', '4 minutes'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',
-                    'https://esmvaltool.readthedocs.io/en/version2_development/recipes/recipe_ensclus.html',
+                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_ensclus.html',
                     role=util.WPS_ROLE_DOC),
-                Metadata(
-                    'Media',
-                    util.diagdata_url() + '/ensclus/ensclus_thumbnail.png',
-                    role=util.WPS_ROLE_MEDIA),
+#                Metadata(
+#                    'Media',
+#                    util.diagdata_url() + '/ensclus/ensclus_thumbnail.png',
+#                    role=util.WPS_ROLE_MEDIA),
             ],
             inputs=inputs,
             outputs=outputs,
