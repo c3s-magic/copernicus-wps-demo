@@ -12,10 +12,20 @@ def test_wps_caps():
                             '/wps:ProcessOfferings'
                             '/wps:Process'
                             '/ows:Identifier')
-    assert sorted(names.split()) == [
-        'mydiag',
-        'perfmetrics',
-        'py_demo',
-        'rainfarm',
-        'rmse',
-        'sleep']
+    # 'consecdrydays',
+    # 'shape_select',
+    # 'perfmetrics',
+    expected_caps = sorted([
+        'cvdp',
+        'ensclus',
+        'preproc',
+        'sleep',
+        'blocking',
+        'stratosphere-troposphere',
+        'annularmodes',
+        'teleconnections',
+        'weather_regimes',
+    ])
+    print(sorted(names.split()))
+    print(expected_caps)
+    assert sorted(names.split()) == expected_caps

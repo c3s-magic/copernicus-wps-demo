@@ -5,30 +5,31 @@ from pywps import FORMATS, ComplexInput, ComplexOutput, Format, LiteralInput, Li
 from pywps.app.Common import Metadata
 from pywps.response.status import WPS_STATUS
 
+from copernicus.processes.utils import default_outputs, model_experiment_ensemble, year_ranges, outputs_from_plot_names
+
 from .. import runner, util
-from .utils import default_outputs, model_experiment_ensemble, year_ranges
 
 LOGGER = logging.getLogger("PYWPS")
 
 
-class CVDP(Process):
+class CapacityFactor(Process):
     def __init__(self):
-        inputs = [
-            *model_experiment_ensemble(
-                models=['MPI-ESM-LR'],
-                experiments=['historical'],
-                ensembles=['r1i1p1'],
-                start_end_year=(1850, 2005),
-                start_end_defaults=(2000, 2002),
-            ),
-        ]
+        inputs = []
+        self.plotlist = []
         outputs = [
-            # ComplexOutput(
-            #     'plot',
-            #     'Output plot',
-            #     abstract='Generated output plot of ESMValTool processing.',
-            #     as_reference=True,
-            #     supported_formats=[Format('image/png')]),
+            ComplexOutput(
+                'plot',
+                'Capacity Factor of Wind Power plot',
+                abstract='Ratio of average estimated power to theoretical maximum power.',
+                as_reference=True,
+                supported_formats=[Format('image/png')]),
+            ComplexOutput(
+                'data',
+                'Capacity Factor of Wind Power data',
+                abstract=
+                'Ratio of average estimated power to theoretical maximum power.',
+                as_reference=True,
+                supported_formats=[Format('application/zip')]),
             ComplexOutput(
                 'archive',
                 'Archive',
@@ -39,22 +40,22 @@ class CVDP(Process):
             *default_outputs(),
         ]
 
-        super(CVDP, self).__init__(
+        super(CapacityFactor, self).__init__(
             self._handler,
-            identifier="cvdp",
-            title="NCAR CVDPackage",
+            identifier="capacity_factor",
+            title="Capacity factor of wind power",
             version=runner.VERSION,
-            abstract="Run the NCAR CVDPackage",
+            abstract="""Metric showing the wind capacity factor to estimate energy supply.""",
             metadata=[
-                Metadata('Estimated Calculation Time', '2 Minutes'),
+                Metadata('Estimated Calculation Time', '1 minute'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata(
                     'Documentation',
-                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_cvdp.html',
+                    'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_capacity_factor.html',
                     role=util.WPS_ROLE_DOC),
 #                Metadata(
 #                    'Media',
-#                    util.diagdata_url() + '/pydemo/pydemo_thumbnail.png',
+#                    util.diagdata_url() + '/capacity_factor/diurnal_temperature_variation.png',
 #                    role=util.WPS_ROLE_MEDIA),
             ],
             inputs=inputs,
@@ -64,25 +65,21 @@ class CVDP(Process):
 
     def _handler(self, request, response):
         response.update_status("starting ...", 0)
-        workdir = self.workdir
 
         # build esgf search constraints
-        constraints = dict(
-            model=request.inputs['model'][0].data,
-            experiment=request.inputs['experiment'][0].data,
-            time_frequency='mon',
-            cmor_table='Amon',
-            ensemble=request.inputs['ensemble'][0].data,
-        )
+        constraints = dict()
+
+        options = dict()
 
         # generate recipe
         response.update_status("generate recipe ...", 10)
         recipe_file, config_file = runner.generate_recipe(
-            workdir=workdir,
-            diag='cvdp',
+            workdir=self.workdir,
+            diag='capacity_factor_wp7',
             constraints=constraints,
-            start_year=request.inputs['start_year'][0].data,
-            end_year=request.inputs['end_year'][0].data,
+            options=options,
+            start_year=1980,
+            end_year=2005,
             output_format='png',
         )
 
@@ -104,30 +101,39 @@ class CVDP(Process):
         response.outputs['debug_log'].output_format = FORMATS.TEXT
         response.outputs['debug_log'].file = result['debug_logfile']
 
-        if result['success']:
-            try:
-                self.get_outputs(result, response)
-            except Exception as e:
-                response.update_status("exception occured: " + str(e), 85)
-        else:
+        if not result['success']:
             LOGGER.exception('esmvaltool failed!')
-            response.update_status("exception occured: " + result['exception'], 85)
+            response.update_status("exception occured: " + result['exception'],
+                                   100)
+            return response
+
+        try:
+            self.get_outputs(result, response)
+        except Exception as e:
+            response.update_status("exception occured: " + str(e), 85)
 
         response.update_status("creating archive of diagnostic result ...", 90)
 
         response.outputs['archive'].output_format = Format('application/zip')
         response.outputs['archive'].file = runner.compress_output(
-            os.path.join(workdir, 'output'), 'diagnostic_result.zip')
+            os.path.join(self.workdir, 'output'), 'diagnostic_result.zip')
 
         response.update_status("done.", 100)
         return response
 
-    def get_output(self, result, response):
+    def get_outputs(self, result, response):
         # result plot
         response.update_status("collecting output ...", 80)
-        # response.outputs['plot'].output_format = Format('application/png')
-        # response.outputs['plot'].file = runner.get_output(
-        #     result['work_dir'], # Yes, it's in the work dir
-        #     path_filter=os.path.join('diagnostic1', 'cvdp'),
-        #     name_filter="pr.mean.ann",
-        #     output_format="png")
+        response.outputs['plot'].output_format = Format('application/png')
+        response.outputs['plot'].file = runner.get_output(
+            result['plot_dir'],
+            path_filter=os.path.join('capacity_factor', 'main'),
+            name_filter="capacity_factor*",
+            output_format="png")
+
+        response.outputs['data'].output_format = FORMATS.NETCDF
+        response.outputs['data'].file = runner.get_output(
+            result['work_dir'],
+            path_filter=os.path.join('capacity_factor', 'main'),
+            name_filter="capacity_factor*",
+            output_format="nc")

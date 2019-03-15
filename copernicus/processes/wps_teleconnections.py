@@ -5,45 +5,49 @@ from pywps import FORMATS, ComplexInput, ComplexOutput, Format, LiteralInput, Li
 from pywps.app.Common import Metadata
 from pywps.response.status import WPS_STATUS
 
-from .utils import default_outputs, model_experiment_ensemble, outputs_from_plot_names
+from copernicus.processes.utils import default_outputs, model_experiment_ensemble, outputs_from_plot_names
 
 from .. import runner, util
 
 LOGGER = logging.getLogger("PYWPS")
 
 
-class ZMNAM(Process):
+class Teleconnections(Process):
     def __init__(self):
         inputs = [
             *model_experiment_ensemble(
-                models=['MPI-ESM-MR'],
-                experiments=['amip'],
-                ensembles=['r1i1p1'],
+                models=['EC-EARTH'],
+                experiments=['historical'],
+                ensembles=['r2i1p1'],
                 start_end_year=(1850, 2005),
-                start_end_defaults=(1979, 2008)
+                start_end_defaults=(1980, 1989)
             ),
+            LiteralInput(
+                'ref_model',
+                'Reference Model',
+                abstract='Choose a reference model like ERA-Interim.',
+                data_type='string',
+                allowed_values=['ERA-Interim'],
+                default='ERA-Interim',
+                min_occurs=1,
+                max_occurs=1),
+            LiteralInput('season', 'Season',
+                         abstract='Choose a season like DJF.',
+                         data_type='string',
+                         allowed_values=['DJF', 'MAM', 'JJA', 'SON', 'ALL'],
+                         default='DJF'),
+            LiteralInput('teles', 'Teles (EOFs)',
+                         abstract='Choose an EOF like NAO.',
+                         data_type='string',
+                         allowed_values=['NAO','AO','PNA'],
+                         default='NAO'),
         ]
-        self.pressure_levels = [5000, 25000, 50000, 100000]
-        self.plotlist = ["{}Pa_mo_reg".format(i) for i in  self.pressure_levels]
-        self.plotlist.extend(
-            ["{}Pa_da_pdf".format(i) for i in  self.pressure_levels])
-        self.plotlist.extend(
-            ["{}Pa_mo_ts".format(i) for i in  self.pressure_levels])
+        self.plotlist = [
+            "EOF{}".format(i) for i in range(1,5)
+        ]
         outputs = [
             *outputs_from_plot_names(self.plotlist),
-            ComplexOutput('regr_map', 'Regr Map Data',
-                          abstract='Generated output data of ESMValTool processing.',
-                          as_reference=True,
-                          supported_formats=[FORMATS.NETCDF]),
-            ComplexOutput('eofs', 'EOF Data',
-                          abstract='Generated output data of ESMValTool processing.',
-                          as_reference=True,
-                          supported_formats=[FORMATS.NETCDF]),
-            ComplexOutput('pc_mo', 'PC Mo Data',
-                          abstract='Generated output data of ESMValTool processing.',
-                          as_reference=True,
-                          supported_formats=[FORMATS.NETCDF]),
-            ComplexOutput('pc_da', 'PC Da Data',
+            ComplexOutput('data', 'EOF Data',
                           abstract='Generated output data of ESMValTool processing.',
                           as_reference=True,
                           supported_formats=[FORMATS.NETCDF]),
@@ -54,17 +58,17 @@ class ZMNAM(Process):
             *default_outputs(),
         ]
 
-        super(ZMNAM, self).__init__(
+        super(Teleconnections, self).__init__(
             self._handler,
-            identifier="zmnam",
-            title="Stratosphere-troposphere coupling and annular modes indices (ZMNAM)",
+            identifier="teleconnections",
+            title="Teleconnection indices",
             version=runner.VERSION,
-            abstract="Stratosphere-troposphere coupling and annular modes indices (ZMNAM)",
+            abstract="Diagnostic providing teleconnection indices (Z500 empirical orthogonal functions)",
             metadata=[
-		Metadata('Estimated Calculation Time', '3 minutes'),
+                Metadata('Estimated Calculation Time', '2 minutes'),
                 Metadata('ESMValTool', 'http://www.esmvaltool.org/'),
                 Metadata('Documentation',
-                         'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_zmnam.html',
+                         'https://esmvaltool.readthedocs.io/en/latest/recipes/recipe_miles.html',
                          role=util.WPS_ROLE_DOC),
 #                Metadata('Media',
 #                         util.diagdata_url() + '/pydemo/pydemo_thumbnail.png',
@@ -86,14 +90,22 @@ class ZMNAM(Process):
             ensemble=request.inputs['ensemble'][0].data,
         )
 
+        options = dict(
+            season=request.inputs['season'][0].data,
+            teles=request.inputs['teles'][0].data
+        )
+
         # generate recipe
         response.update_status("generate recipe ...", 10)
+        start_year = request.inputs['start_year'][0].data
+        end_year = request.inputs['end_year'][0].data
         recipe_file, config_file = runner.generate_recipe(
             workdir=workdir,
-            diag='zmnam',
+            diag='miles_eof',
             constraints=constraints,
-            start_year=request.inputs['start_year'][0].data,
-            end_year=request.inputs['end_year'][0].data,
+            options=options,
+            start_year=start_year,
+            end_year=end_year,
             output_format='png',
         )
 
@@ -117,7 +129,13 @@ class ZMNAM(Process):
 
         if result['success']:
             try:
-                self.get_outputs(result, response)
+                subdir = os.path.join(constraints['model'], constraints['experiment'],
+                              constraints['ensemble'],
+                              "{}-{}".format(start_year, end_year),
+                              options['season'],
+                              'EOFs',
+                              options['teles'])
+                self.get_outputs(result, subdir, response)
             except Exception as e:
                 response.update_status("exception occured: " + str(e), 85)
         else:
@@ -132,7 +150,7 @@ class ZMNAM(Process):
         response.update_status("done.", 100)
         return response
 
-    def get_outputs(self, result, response):
+    def get_outputs(self, result, subdir, response):
         # result plot
         response.update_status("collecting output ...", 80)
         for plot in self.plotlist:
@@ -140,34 +158,14 @@ class ZMNAM(Process):
             response.outputs[key].output_format = Format('application/png')
             response.outputs[key].file = runner.get_output(
                 result['plot_dir'],
-                path_filter=os.path.join('zmnam', 'main'),
-                name_filter="*_{}".format(plot),
+                path_filter=os.path.join('miles_diagnostics', 'miles_eof',
+                                        subdir),
+                name_filter="{}_*".format(plot),
                 output_format="png")
-        
-        response.outputs['regr_map'].output_format = FORMATS.NETCDF
-        response.outputs['regr_map'].file = runner.get_output(
-            result['work_dir'],
-            path_filter=os.path.join('zmnam', 'main'),
-            name_filter="*regr_map*",
-            output_format="nc")
 
-        response.outputs['eofs'].output_format = FORMATS.NETCDF
-        response.outputs['eofs'].file = runner.get_output(
+        response.outputs['data'].output_format = FORMATS.NETCDF
+        response.outputs['data'].file = runner.get_output(
             result['work_dir'],
-            path_filter=os.path.join('zmnam', 'main'),
-            name_filter="*eofs*",
-            output_format="nc")
-        
-        response.outputs['pc_mo'].output_format = FORMATS.NETCDF
-        response.outputs['pc_mo'].file = runner.get_output(
-            result['work_dir'],
-            path_filter=os.path.join('zmnam', 'main'),
-            name_filter="*pc_mo*",
-            output_format="nc")
-        
-        response.outputs['pc_da'].output_format = FORMATS.NETCDF
-        response.outputs['pc_da'].file = runner.get_output(
-            result['work_dir'],
-            path_filter=os.path.join('zmnam', 'main'),
-            name_filter="*pc_da*",
+            path_filter=os.path.join('miles_diagnostics', 'miles_eof', subdir),
+            name_filter="EOFs*",
             output_format="nc")
