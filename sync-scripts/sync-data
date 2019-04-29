@@ -9,5 +9,5 @@ TARGET_MACHINE=$1
 rsync -avhr --progress --copy-links --files-from=CMIP-SELECTION /group_workspaces/jasmin2/cp4cds1/data/c3s-cmip5/output1/ $TARGET_MACHINE:/data/cp4cds/
 
 #Also synchronize OBS files
-#rsync -avhr --progress --copy-links --files-from=OBS-SELECTION /group_workspaces/jasmin2/cp4cds1/data/dkrz_pool/ $TARGET_MACHINE:/data/dkrz_pool/
+rsync -avhr --progress --copy-links --files-from=OBS-SELECTION /group_workspaces/jasmin2/cp4cds1/data/dkrz_pool/ $TARGET_MACHINE:/data/dkrz_pool/
 
