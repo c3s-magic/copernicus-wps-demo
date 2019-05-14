@@ -622,6 +622,8 @@ ICHEC/EC-EARTH/historical/mon/atmos/Amon/r12i1p1/pr/latest
 
 
 # recipe_spei.yml
+CSIRO-BOM/ACCESS1-0/historical/mon/atmos/Amon/r1i1p1/tas/latest
+CSIRO-BOM/ACCESS1-3/historical/mon/atmos/Amon/r1i1p1/tas/latest
 
 
 # recipe_toymodel_wp4.yml
